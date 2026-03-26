@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stream to River: An Interactive Codebase Journey</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;700&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Color Palette */
+            --vermillion: #D94F30;
+            --vermillion-light: #E67959;
+            --vermillion-dark: #B33D22;
+            --cream: #FFF8F0;
+            --warm-white: #FFFBF7;
+            --warm-gray-50: #FAF8F6;
+            --warm-gray-100: #F0EBE6;
+            --warm-gray-200: #E0D7CF;
+            --warm-gray-300: #C9BCB0;
+            --warm-gray-600: #6B5D52;
+            --warm-gray-800: #3D3229;
+            --warm-gray-900: #2A2119;
+            --code-bg: #2B2520;
+            --code-keyword: #FF9E64;
+            --code-string: #9ECE6A;
+            --code-function: #7AA2F7;
+            --code-comment: #787268;
+
+            /* Typography */
+            --font-display: 'Bricolage Grotesque', sans-serif;
+            --font-body: 'DM Sans', sans-serif;
+            --font-code: 'JetBrains Mono', monospace;
+
+            /* Spacing */
+            --space-xs: 0.5rem;
+            --space-sm: 1rem;
+            --space-md: 1.5rem;
+            --space-lg: 2rem;
+            --space-xl: 3rem;
+            --space-2xl: 4rem;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--warm-white);
+            color: var(--warm-gray-900);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 251, 247, 0.95);
+            backdrop-filter: blur(10px);
+            padding: var(--space-sm) var(--space-lg);
+            z-index: 1000;
+            border-bottom: 2px solid var(--warm-gray-100);
+        }
+
+        .nav-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-title {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--vermillion);
+        }
+
+        .nav-progress {
+            flex: 1;
+            max-width: 400px;
+            margin: 0 var(--space-lg);
+            height: 4px;
+            background: var(--warm-gray-200);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .nav-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--vermillion), var(--vermillion-light));
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .nav-module {
+            font-size: 0.875rem;
+            color: var(--warm-gray-600);
+            font-weight: 500;
+        }
+
+        /* Container */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 100px var(--space-lg) var(--space-2xl);
+        }
+
+        /* Module Sections */
+        .module {
+            min-height: 100vh;
+            padding: var(--space-2xl) 0;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .module.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .module:nth-child(odd) {
+            background: var(--warm-white);
+        }
+
+        .module:nth-child(even) {
+            background: var(--cream);
+        }
+
+        .module-header {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--vermillion);
+            margin-bottom: var(--space-lg);
+            line-height: 1.2;
+        }
+
+        .module-subtitle {
+            font-size: 1.25rem;
+            color: var(--warm-gray-600);
+            margin-bottom: var(--space-xl);
+            font-weight: 500;
+        }
+
+        /* Text Blocks */
+        .text-block {
+            margin-bottom: var(--space-lg);
+            font-size: 1.125rem;
+            color: var(--warm-gray-800);
+            max-width: 65ch;
+        }
+
+        .text-block strong {
+            color: var(--vermillion-dark);
+            font-weight: 600;
+        }
+
+        /* Glossary Tooltips */
+        .glossary {
+            position: relative;
+            color: var(--vermillion);
+            font-weight: 600;
+            cursor: help;
+            border-bottom: 2px dotted var(--vermillion-light);
+        }
+
+        .glossary:hover {
+            color: var(--vermillion-dark);
+        }
+
+        .tooltip {
+            position: fixed;
+            background: var(--warm-gray-900);
+            color: var(--warm-white);
+            padding: var(--space-sm) var(--space-md);
+            border-radius: 8px;
+            font-size: 0.875rem;
+            max-width: 300px;
+            z-index: 10000;
+            pointer-events: none;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .tooltip.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .tooltip::before {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 20px;
+            width: 12px;
+            height: 12px;
+            background: var(--warm-gray-900);
+            transform: rotate(45deg);
+        }
+
+        /* Code Blocks */
+        .code-container {
+            margin: var(--space-lg) 0;
+            background: var(--code-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .code-header {
+            background: rgba(0, 0, 0, 0.3);
+            padding: var(--space-sm) var(--space-md);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .code-title {
+            font-family: var(--font-code);
+            font-size: 0.875rem;
+            color: var(--warm-gray-300);
+        }
+
+        .code-lang {
+            font-size: 0.75rem;
+            color: var(--vermillion-light);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        pre {
+            margin: 0;
+            padding: var(--space-md);
+            overflow-x: auto;
+            font-family: var(--font-code);
+            font-size: 0.875rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        code {
+            color: var(--warm-gray-100);
+            font-family: var(--font-code);
+        }
+
+        .code-keyword { color: var(--code-keyword); }
+        .code-string { color: var(--code-string); }
+        .code-function { color: var(--code-function); }
+        .code-comment { color: var(--code-comment); }
+
+        /* Translation Blocks */
+        .translation {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-md);
+            margin: var(--space-lg) 0;
+            padding: var(--space-lg);
+            background: var(--warm-gray-50);
+            border-radius: 12px;
+            border: 2px solid var(--warm-gray-200);
+        }
+
+        .translation-side {
+            padding: var(--space-md);
+        }
+
+        .translation-side h3 {
+            font-family: var(--font-display);
+            font-size: 1.125rem;
+            margin-bottom: var(--space-sm);
+            color: var(--vermillion);
+        }
+
+        .translation-code {
+            background: var(--code-bg);
+            padding: var(--space-md);
+            border-radius: 8px;
+            font-family: var(--font-code);
+            font-size: 0.875rem;
+            color: var(--warm-gray-100);
+            white-space: pre-wrap;
+        }
+
+        .translation-english {
+            font-size: 1rem;
+            line-height: 1.8;
+            color: var(--warm-gray-800);
+        }
+
+        /* Animations */
+        .animation-container {
+            margin: var(--space-xl) 0;
+            padding: var(--space-xl);
+            background: var(--warm-white);
+            border-radius: 12px;
+            border: 2px solid var(--vermillion-light);
+        }
+
+        .chat-animation {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-md);
+        }
+
+        .chat-actor {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--space-sm);
+            opacity: 0;
+            transform: translateX(-20px);
+            animation: slideIn 0.5s ease forwards;
+        }
+
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .chat-actor:nth-child(1) { animation-delay: 0s; }
+        .chat-actor:nth-child(2) { animation-delay: 0.8s; }
+        .chat-actor:nth-child(3) { animation-delay: 1.6s; }
+        .chat-actor:nth-child(4) { animation-delay: 2.4s; }
+        .chat-actor:nth-child(5) { animation-delay: 3.2s; }
+
+        .actor-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .avatar-api {
+            background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+            color: white;
+        }
+
+        .avatar-rpc {
+            background: linear-gradient(135deg, #4ECDC4, #44A08D);
+            color: white;
+        }
+
+        .avatar-db {
+            background: linear-gradient(135deg, #A8E6CF, #88D8B0);
+            color: white;
+        }
+
+        .chat-bubble {
+            flex: 1;
+            background: white;
+            padding: var(--space-md);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .actor-name {
+            font-weight: 700;
+            margin-bottom: var(--space-xs);
+            font-family: var(--font-display);
+        }
+
+        .actor-message {
+            color: var(--warm-gray-800);
+            font-size: 0.95rem;
+        }
+
+        /* Flow Diagram */
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: var(--space-xl) 0;
+            padding: var(--space-xl);
+            background: var(--warm-gray-50);
+            border-radius: 12px;
+        }
+
+        .flow-box {
+            flex: 1;
+            padding: var(--space-lg);
+            background: white;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border: 2px solid var(--warm-gray-200);
+        }
+
+        .flow-box h4 {
+            font-family: var(--font-display);
+            font-size: 1.125rem;
+            margin-bottom: var(--space-sm);
+            color: var(--vermillion);
+        }
+
+        .flow-arrow {
+            font-size: 2rem;
+            color: var(--vermillion);
+            margin: 0 var(--space-sm);
+        }
+
+        /* Quiz */
+        .quiz {
+            margin: var(--space-xl) 0;
+            padding: var(--space-xl);
+            background: var(--warm-gray-50);
+            border-radius: 12px;
+            border: 2px solid var(--vermillion-light);
+        }
+
+        .quiz-question {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: var(--space-lg);
+            color: var(--warm-gray-900);
+        }
+
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-sm);
+        }
+
+        .quiz-option {
+            padding: var(--space-md);
+            background: white;
+            border: 2px solid var(--warm-gray-200);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 1rem;
+        }
+
+        .quiz-option:hover {
+            border-color: var(--vermillion-light);
+            background: var(--warm-white);
+        }
+
+        .quiz-option.selected {
+            border-color: var(--vermillion);
+            background: rgba(217, 79, 48, 0.1);
+        }
+
+        .quiz-option.correct {
+            border-color: #4ECDC4;
+            background: rgba(78, 205, 196, 0.1);
+        }
+
+        .quiz-option.incorrect {
+            border-color: #FF6B6B;
+            background: rgba(255, 107, 107, 0.1);
+        }
+
+        .quiz-feedback {
+            margin-top: var(--space-md);
+            padding: var(--space-md);
+            border-radius: 8px;
+            font-weight: 500;
+            display: none;
+        }
+
+        .quiz-feedback.show {
+            display: block;
+        }
+
+        .quiz-feedback.correct {
+            background: rgba(78, 205, 196, 0.1);
+            color: #44A08D;
+        }
+
+        .quiz-feedback.incorrect {
+            background: rgba(255, 107, 107, 0.1);
+            color: #C92A2A;
+        }
+
+        /* Visual Diagram */
+        .visual-diagram {
+            margin: var(--space-xl) 0;
+            padding: var(--space-xl);
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .diagram-title {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: var(--space-lg);
+            color: var(--vermillion);
+            text-align: center;
+        }
+
+        .metaphor-box {
+            padding: var(--space-lg);
+            background: linear-gradient(135deg, rgba(217, 79, 48, 0.05), rgba(230, 121, 89, 0.05));
+            border-left: 4px solid var(--vermillion);
+            border-radius: 8px;
+            margin: var(--space-lg) 0;
+            font-style: italic;
+        }
+
+        /* Ebbinghaus Curve */
+        .curve-container {
+            position: relative;
+            height: 300px;
+            margin: var(--space-xl) 0;
+            padding: var(--space-lg);
+            background: white;
+            border-radius: 12px;
+        }
+
+        .curve-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Bitmask Visual */
+        .bitmask-demo {
+            display: flex;
+            gap: var(--space-sm);
+            margin: var(--space-lg) 0;
+            justify-content: center;
+        }
+
+        .bit {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border: 2px solid var(--warm-gray-300);
+            border-radius: 8px;
+            font-family: var(--font-code);
+        }
+
+        .bit.active {
+            background: var(--vermillion);
+            color: white;
+            border-color: var(--vermillion-dark);
+        }
+
+        .bit-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .bit-label {
+            font-size: 0.75rem;
+            margin-top: var(--space-xs);
+        }
+
+        /* Navigation Buttons */
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: var(--space-2xl);
+            padding-top: var(--space-lg);
+            border-top: 2px solid var(--warm-gray-200);
+        }
+
+        .btn {
+            padding: var(--space-sm) var(--space-lg);
+            background: var(--vermillion);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background: var(--vermillion-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            background: var(--warm-gray-300);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .module-header {
+                font-size: 2rem;
+            }
+
+            .translation {
+                grid-template-columns: 1fr;
+            }
+
+            .flow-diagram {
+                flex-direction: column;
+            }
+
+            .flow-arrow {
+                transform: rotate(90deg);
+                margin: var(--space-sm) 0;
+            }
+
+            .nav-progress {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-content">
+            <div class="nav-title">Stream to River Course</div>
+            <div class="nav-progress">
+                <div class="nav-progress-bar" id="progressBar"></div>
+            </div>
+            <div class="nav-module" id="moduleIndicator">Module 1/6</div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Module 1: What Streams to River Does -->
+        <section class="module" id="module1">
+            <h1 class="module-header">Module 1: What Stream to River Does</h1>
+            <p class="module-subtitle">Your First Word Journey</p>
+
+            <div class="text-block">
+                <strong>Stream to River</strong> is an English learning app that helps you remember words using the <span class="glossary" data-tooltip="A psychological principle that shows how memory decays over time without reinforcement. Named after Hermann Ebbinghaus who discovered it in 1885.">Ebbinghaus Forgetting Curve</span>.
+            </div>
+
+            <div class="text-block">
+                When you click "Add Word", the app doesn't just save it. It creates a personalized review schedule that adapts to how well you remember each word.
+            </div>
+
+            <div class="metaphor-box">
+                <strong>Think of it like a smart garden:</strong> You plant seeds (words), and the app waters them (reviews) at exactly the right times. Words you struggle with get more water; words you know well get less.
+            </div>
+
+            <div class="visual-diagram">
+                <h3 class="diagram-title">The Journey of a Word: "ubiquitous"</h3>
+
+                <div class="flow-diagram">
+                    <div class="flow-box">
+                        <h4>1. You Click</h4>
+                        <p>User adds "ubiquitous"</p>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box">
+                        <h4>2. HTTP Request</h4>
+                        <p>POST /api/word-add</p>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box">
+                        <h4>3. RPC Call</h4>
+                        <p>AddNewWord()</p>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-box">
+                        <h4>4. Database</h4>
+                        <p>Word saved!</p>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="font-family: var(--font-display); font-size: 1.5rem; margin-top: var(--space-xl); margin-bottom: var(--space-md); color: var(--vermillion);">Let's Trace the Code</h3>
+
+            <div class="translation">
+                <div class="translation-side">
+                    <h3>Code</h3>
+                    <div class="translation-code"><span class="code-keyword">func</span> <span class="code-function">AddNewWordHandler</span>(ctx context.Context, c *app.RequestContext) {
+    userId, err := user.<span class="code-function">GetUserIDFromContext</span>(c)
+    <span class="code-keyword">if</span> err != <span class="code-keyword">nil</span> {
+        c.<span class="code-function">JSON</span>(http.StatusUnauthorized, ...)
+        <span class="code-keyword">return</span>
+    }
+
+    <span class="code-keyword">var</span> req words.AddWordReq
+    c.<span class="code-function">BindAndValidate</span>(&req)
+    req.UserId = userId
+
+    resp, err := rpcclient.WordsRPCCli.<span class="code-function">AddNewWord</span>(ctx, &req)
+    c.<span class="code-function">JSON</span>(http.StatusOK, resp)
+}</div>
+                </div>
+                <div class="translation-side">
+                    <h3>English</h3>
+                    <div class="translation-english">
+                        <p><strong>First,</strong> we check who you are by reading your <span class="glossary" data-tooltip="JSON Web Token - a secure way to identify users. Like a digital ID card that proves you are who you say you are.">JWT token</span>.</p>
+                        <p><strong>Then,</strong> we validate your word data (name, tag).</p>
+                        <p><strong>Finally,</strong> we call the RPC service to save the word and send you a response.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span class="code-title">/apiservice/biz/handler/words/word.go</span>
+                    <span class="code-lang">Go</span>
+                </div>
+                <pre><code><span class="code-comment">// Clean up the word name</span>
+<span class="code-keyword">func</span> <span class="code-function">cleanupWord</span>(word <span class="code-keyword">string</span>) <span class="code-keyword">string</span> {
+    word = strings.<span class="code-function">TrimSpace</span>(word)            <span class="code-comment">// Remove whitespace</span>
+    word = strings.<span class="code-function">ReplaceAll</span>(word, <span class="code-string">"\n"</span>, <span class="code-string">""</span>) <span class="code-comment">// Remove newlines</span>
+    word = strings.<span class="code-function">ReplaceAll</span>(word, <span class="code-string">"\r"</span>, <span class="code-string">""</span>) <span class="code-comment">// Remove carriage returns</span>
+    word = strings.<span class="code-function">ReplaceAll</span>(word, <span class="code-string">" "</span>, <span class="code-string">""</span>)  <span class="code-comment">// Remove spaces</span>
+    word = strings.<span class="code-function">ReplaceAll</span>(word, <span class="code-string">"\t"</span>, <span class="code-string">""</span>) <span class="code-comment">// Remove tabs</span>
+    <span class="code-keyword">return</span> word
+}</code></pre>
+            </div>
+
+            <div class="quiz">
+                <div class="quiz-question">What happens if the JWT token is invalid?</div>
+                <div class="quiz-options">
+                    <div class="quiz-option" data-answer="wrong">The word is saved anyway with userId = 0</div>
+                    <div class="quiz-option" data-answer="correct">The function returns early with a 401 Unauthorized error</div>
+                    <div class="quiz-option" data-answer="wrong">The RPC service generates a new token</div>
+                    <div class="quiz-option" data-answer="wrong">The word is saved to a temporary cache</div>
+                </div>
+                <div class="quiz-feedback"></div>
+            </div>
+
+            <div class="nav-buttons">
+                <button class="btn" disabled>Previous</button>
+                <button class="btn" onclick="goToModule(2)">Next Module</button>
+            </div>
+        </section>
+
+        <!-- Module 2: Meet the Cast -->
+        <section class="module" id="module2">
+            <h1 class="module-header">Module 2: Meet the Cast</h1>
+            <p class="module-subtitle">API Service, RPC Service & Frontend</p>
+
+            <div class="text-block">
+                Stream to River is built with three main actors, each with their own job. They communicate like a well-coordinated team.
+            </div>
+
+            <div class="visual-diagram">
+                <h3 class="diagram-title">The Three Actors</h3>
+
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-lg); margin-top: var(--space-lg);">
+                    <div style="text-align: center; padding: var(--space-lg); background: var(--warm-gray-50); border-radius: 12px;">
+                        <div class="actor-avatar avatar-api" style="margin: 0 auto var(--space-md);">API</div>
+                        <h4 style="font-family: var(--font-display); margin-bottom: var(--space-sm); color: var(--vermillion);">API Service</h4>
+                        <p style="font-size: 0.95rem; color: var(--warm-gray-700);">The <span class="glossary" data-tooltip="A web server that handles HTTP requests from browsers. Built with Hertz, a high-performance Go web framework.">gateway</span> that talks to the outside world. Handles HTTP, validates requests.</p>
+                    </div>
+
+                    <div style="text-align: center; padding: var(--space-lg); background: var(--warm-gray-50); border-radius: 12px;">
+                        <div class="actor-avatar avatar-rpc" style="margin: 0 auto var(--space-md);">RPC</div>
+                        <h4 style="font-family: var(--font-display); margin-bottom: var(--space-sm); color: var(--vermillion);">RPC Service</h4>
+                        <p style="font-size: 0.95rem; color: var(--warm-gray-700);">The <span class="glossary" data-tooltip="Remote Procedure Call - allows services to call functions on other services as if they were local. Built with Kitex.">brain</span> that does the heavy lifting. Generates quizzes, calculates review times, calls AI.</p>
+                    </div>
+
+                    <div style="text-align: center; padding: var(--space-lg); background: var(--warm-gray-50); border-radius: 12px;">
+                        <div class="actor-avatar avatar-db" style="margin: 0 auto var(--space-md);">DB</div>
+                        <h4 style="font-family: var(--font-display); margin-bottom: var(--space-sm); color: var(--vermillion);">Database</h4>
+                        <p style="font-size: 0.95rem; color: var(--warm-gray-700);">The <span class="glossary" data-tooltip="MySQL database that persists all word data, user progress, and review records. Redis is used for caching.">memory</span> that stores everything. Words, progress, user data.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="metaphor-box">
+                <strong>Think of a library:</strong> The API Service is the front desk (taking requests), the RPC Service is the librarian (finding books and organizing), and the Database is the shelves (storing everything).
+            </div>
+
+            <h3 style="font-family: var(--font-display); font-size: 1.5rem; margin-top: var(--space-xl); margin-bottom: var(--space-md); color: var(--vermillion);">Group Chat: Adding a Word</h3>
+
+            <div class="animation-container">
+                <div class="chat-animation">
+                    <div class="chat-actor">
+                        <div class="actor-avatar avatar-api">API</div>
+                        <div class="chat-bubble">
+                            <div class="actor-name" style="color: #FF6B6B;">API Service</div>
+                            <div class="actor-message">Hey! User wants to add the word "ephemeral". I validated the request and got their userId from the JWT token. Can you handle it?</div>
+                        </div>
+                    </div>
+
+                    <div class="chat-actor">
+                        <div class="actor-avatar avatar-rpc">RPC</div>
+                        <div class="chat-bubble">
+                            <div class="actor-name" style="color: #4ECDC4;">RPC Service</div>
+                            <div class="actor-message">Got it! Let me check if this word already exists and fetch its definition from the external API. Then I'll create a review schedule.</div>
+                        </div>
+                    </div>
+
+                    <div class="chat-actor">
+                        <div class="actor-avatar avatar-db">DB</div>
+                        <div class="chat-bubble">
+                            <div class="actor-name" style="color: #88D8B0;">Database</div>
+                            <div class="actor-message">Checking... word doesn't exist yet. Ready to insert!</div>
+                        </div>
+                    </div>
+
+                    <div class="chat-actor">
+                        <div class="actor-avatar avatar-rpc">RPC</div>
+                        <div class="chat-bubble">
+                            <div class="actor-name" style="color: #4ECDC4;">RPC Service</div>
+                            <div class="actor-message">Perfect! Saving "ephemeral" with definition, setting next review time to 5 minutes from now (Level 0).</div>
+                        </div>
+                    </div>
+
+                    <div class="chat-actor">
+                        <div class="actor-avatar avatar-api">API</div>
+                        <div class="chat-bubble">
+                            <div class="actor-name" style="color: #FF6B6B;">API Service</div>
+                            <div class="actor-message">Success! Sending response to user: "Word added successfully!"</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="translation">
+                <div class="translation-side">
+                    <h3>Code</h3>
+                    <div class="translation-code"><span class="code-comment">// API Service calls RPC Service</span>
+resp, err := rpcclient.WordsRPCCli.<span class="code-function">AddNewWord</span>(ctx, &req)
+<span class="code-keyword">if</span> err != <span class="code-keyword">nil</span> {
+    c.<span class="code-function">JSON</span>(http.StatusInternalServerError, ...)
+    <span class="code-keyword">return</span>
+}
+c.<span class="code-function">JSON</span>(http.StatusOK, resp)</div>
+                </div>
+                <div class="translation-side">
+                    <h3>English</h3>
+                    <div class="translation-english">
+                        <p>The API Service calls a function on the RPC Service (even though it's a different program!).</p>
+                        <p>If the RPC call fails, we return an error to the user.</p>
+                        <p>If it succeeds, we pass the response back as JSON.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quiz">
+                <div class="quiz-question">Why separate API Service and RPC Service instead of one big program?</div>
+                <div class="quiz-options">
+                    <div class="quiz-option" data-answer="wrong">It makes the code run faster</div>
+                    <div class="quiz-option" data-answer="correct">It allows them to scale independently and have different responsibilities</div>
+                    <div class="quiz-option" data-answer="wrong">RPC is a newer technology that replaces HTTP</div>
+                    <div class="quiz-option" data-answer="wrong">The database requires them to be separate</div>
+                </div>
+                <div class="quiz-feedback"></div>
+            </div>
+
+            <div class="nav-buttons">
+                <button class="btn" onclick="goToModule(1)">Previous</button>
+                <button class="btn" onclick="goToModule(3)">Next Module</button>
+            </div>
+        </section>
+
+        <!-- Module 3: The Data Highway -->
+        <section class="module" id="module3">
+            <h1 class="module-header">Module 3: The Data Highway</h1>
+            <p class="module-subtitle">How Requests Flow Through the System</p>
+
+            <div class="text-block">
+                Every action in Stream to River follows a path: <strong>HTTP → RPC → Database</strong>.
+            </div>
+
+            <div class="text-block">
+                Let's trace a complete request from when you click "Get Review Words" to when quizzes appear on screen.
+            </div>
+
+            <div class="visual-diagram">
+                <h3 class="diagram-title">Complete Request Flow: Get Review List</h3>
+
+                <div style="display: flex; flex-direction: column; gap: var(--space-md); margin-top: var(--space-lg);">
+                    <div class="flow-box" style="background: linear-gradient(135deg, rgba(255, 107, 107, 0.1), rgba(255, 142, 83, 0.1));">
+                        <h4>1. User Clicks "Review Words"</h4>
+                        <p style="font-family: var(--font-code); font-size: 0.875rem; margin-top: var(--space-xs);">GET /api/review-list</p>
+                    </div>
+
+                    <div class="flow-arrow" style="text-align: center; font-size: 2rem;">↓</div>
+
+                    <div class="flow-box" style="background: linear-gradient(135deg, rgba(255, 107, 107, 0.1), rgba(255, 142, 83, 0.1));">
+                        <h4>2. API Service: Extract User ID</h4>
+                        <p style="font-family: var(--font-code); font-size: 0.875rem; margin-top: var(--space-xs);">userId := GetUserIDFromContext(c)</p>
+                    </div>
+
+                    <div class="flow-arrow" style="text-align: center; font-size: 2rem;">↓</div>
+
+                    <div class="flow-box" style="background: linear-gradient(135deg, rgba(78, 205, 196, 0.1), rgba(68, 160, 141, 0.1));">
+                        <h4>3. RPC Service: Get Review Records</h4>
+                        <p style="font-family: var(--font-code); font-size: 0.875rem; margin-top: var(--space-xs);">GetReviewWordList(ctx, userId)</p>
+                    </div>
+
+                    <div class="flow-arrow" style="text-align: center; font-size: 2rem;">↓</div>
+
+                    <div class="flow-box" style="background: linear-gradient(135deg, rgba(168, 230, 207, 0.1), rgba(136, 216, 176, 0.1));">
+                        <h4>4. Database: Query Review Records</h4>
+                        <p style="font-family: var(--font-code); font-size: 0.875rem; margin-top: var(--space-xs);">SELECT * WHERE next_review_time &lt; NOW()</p>
+                    </div>
+
+                    <div class="flow-arrow" style="text-align: center; font-size: 2rem;">↓</div>
+
+                    <div class="flow-box" style="background: linear-gradient(135deg, rgba(78, 205, 196, 0.1), rgba(68, 160, 141, 0.1));">
+                        <h4>5. RPC Service: Generate Questions</h4>
+                        <p style="font-family: var(--font-code); font-size: 0.875rem; margin-top: var(--space-xs);">generateQuestionsForWord() × 4 types</p>
+                    </div>
+
+                    <div class="flow-arrow" style="text-align: center; font-size: 2rem;">↓</div>
+
+                    <div class="flow-box" style="background: linear-gradient(135deg, rgba(255, 107, 107, 0.1), rgba(255, 142, 83, 0.1));">
+                        <h4>6. API Service: Return JSON</h4>
+                        <p style="font-family: var(--font-code); font-size: 0.875rem; margin-top: var(--space-xs);">c.JSON(200, reviewQuestions)</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="metaphor-box">
+                <strong>Think of a postal system:</strong> Your letter (HTTP request) goes to the post office (API Service), gets sorted and routed (RPC Service), retrieved from storage (Database), and delivered back to you.
+            </div>
+
+            <h3 style="font-family: var(--font-display); font-size: 1.5rem; margin-top: var(--space-xl); margin-bottom: var(--space-md); color: var(--vermillion);">The RPC Service Decides What Questions to Show</h3>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span class="code-title">/rpcservice/biz/words/review_list.go</span>
+                    <span class="code-lang">Go</span>
+                </div>
+                <pre><code><span class="code-comment">// Get review records due today</span>
+now := time.<span class="code-function">Now</span>()
+today2359 := time.<span class="code-function">Date</span>(now.<span class="code-function">Year</span>(), now.<span class="code-function">Month</span>(), now.<span class="code-function">Day</span>(), 23, 59, 59, 0, now.<span class="code-function">Location</span>())
+currentTime := today2359.<span class="code-function">Unix</span>()
+
+<span class="code-comment">// Retrieve review records from the database</span>
+reviewRecords, err := dao.<span class="code-function">GetReviewRecords</span>(userId, currentTime)
+
+<span class="code-comment">// Generate four types of questions for each word</span>
+questions, err := <span class="code-function">generateQuestionsForWord</span>(ctx, userId, word)</code></pre>
+            </div>
+
+            <div class="translation">
+                <div class="translation-side">
+                    <h3>Code</h3>
+                    <div class="translation-code"><span class="code-keyword">if</span> (questionTypes&(1<<(global.CHOOSE_CN-1))) != 0 &&
+   (score&(1<<(global.CHOOSE_CN-1))) == 0 {
+    q1, err := <span class="code-function">generateChooseQuestion</span>(
+        ctx, userId, word, global.CHOOSE_CN
+    )
+    questions = <span class="code-function">append</span>(questions, q1)
+}</div>
+                </div>
+                <div class="translation-side">
+                    <h3>English</h3>
+                    <div class="translation-english">
+                        <p><strong>First check:</strong> Is this question type enabled for this word's tag?</p>
+                        <p><strong>Second check:</strong> Has the user already mastered this question type?</p>
+                        <p><strong>If both pass:</strong> Generate the question and add it to the list.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quiz">
+                <div class="quiz-question">You have 10 words due for review. The RPC service queries the database and generates questions. Where does the "shuffle" happen?</div>
+                <div class="quiz-options">
+                    <div class="quiz-option" data-answer="wrong">In the database query with ORDER BY RANDOM()</div>
+                    <div class="quiz-option" data-answer="correct">In the RPC service using the Fisher-Yates algorithm after generating all questions</div>
+                    <div class="quiz-option" data-answer="wrong">In the API service before returning JSON</div>
+                    <div class="quiz-option" data-answer="wrong">In the frontend JavaScript</div>
+                </div>
+                <div class="quiz-feedback"></div>
+            </div>
+
+            <div class="nav-buttons">
+                <button class="btn" onclick="goToModule(2)">Previous</button>
+                <button class="btn" onclick="goToModule(4)">Next Module</button>
+            </div>
+        </section>
+
+        <!-- Module 4: The Memory System -->
+        <section class="module" id="module4">
+            <h1 class="module-header">Module 4: The Memory System</h1>
+            <p class="module-subtitle">Spaced Repetition & Quiz Generation</p>
+
+            <div class="text-block">
+                The <strong>magic</strong> of Stream to River is how it schedules reviews. It uses the Ebbinghaus Forgetting Curve to show you words <em>right before</em> you forget them.
+            </div>
+
+            <div class="visual-diagram">
+                <h3 class="diagram-title">The Ebbinghaus Forgetting Curve</h3>
+                <div class="curve-container">
+                    <svg class="curve-svg" viewBox="0 0 500 250">
+                        <!-- Axes -->
+                        <line x1="50" y1="200" x2="450" y2="200" stroke="#3D3229" stroke-width="2"/>
+                        <line x1="50" y1="200" x2="50" y2="20" stroke="#3D3229" stroke-width="2"/>
+
+                        <!-- Labels -->
+                        <text x="250" y="230" text-anchor="middle" font-size="14" fill="#6B5D52">Time</text>
+                        <text x="20" y="110" text-anchor="middle" font-size="14" fill="#6B5D52" transform="rotate(-90, 20, 110)">Memory Retention</text>
+
+                        <!-- Forgetting curve -->
+                        <path d="M 50 50 Q 150 100, 250 150 Q 350 180, 450 195"
+                              stroke="#FF6B6B" stroke-width="3" fill="none" stroke-dasharray="5,5"/>
+
+                        <!-- Review points (with reinforcement) -->
+                        <path d="M 50 50 L 100 55 L 150 45 L 200 50 L 250 48 L 300 50 L 350 49 L 400 50 L 450 50"
+                              stroke="#4ECDC4" stroke-width="3" fill="none"/>
+
+                        <!-- Review markers -->
+                        <circle cx="100" cy="55" r="6" fill="#4ECDC4"/>
+                        <circle cx="150" cy="45" r="6" fill="#4ECDC4"/>
+                        <circle cx="200" cy="50" r="6" fill="#4ECDC4"/>
+                        <circle cx="250" cy="48" r="6" fill="#4ECDC4"/>
+
+                        <!-- Labels -->
+                        <text x="100" y="25" text-anchor="middle" font-size="12" fill="#6B5D52">5min</text>
+                        <text x="150" y="25" text-anchor="middle" font-size="12" fill="#6B5D52">24h</text>
+                        <text x="200" y="25" text-anchor="middle" font-size="12" fill="#6B5D52">48h</text>
+                        <text x="250" y="25" text-anchor="middle" font-size="12" fill="#6B5D52">72h</text>
+                    </svg>
+                </div>
+                <p style="text-align: center; color: var(--warm-gray-600); margin-top: var(--space-md);">
+                    <span style="color: #FF6B6B;">━━━</span> Without reviews &nbsp;&nbsp;&nbsp;
+                    <span style="color: #4ECDC4;">━━━</span> With spaced reviews
+                </p>
+            </div>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span class="code-title">/rpcservice/global/keys.go</span>
+                    <span class="code-lang">Go</span>
+                </div>
+                <pre><code><span class="code-keyword">const</span> (
+    LEVEL_0_INTERVAL = 5 * 60             <span class="code-comment">// 5 minutes</span>
+    LEVEL_1_INTERVAL = 24 * 60 * 60       <span class="code-comment">// 24 hours</span>
+    LEVEL_2_INTERVAL = 24 * 60 * 60       <span class="code-comment">// 24 hours</span>
+    LEVEL_3_INTERVAL = 48 * 60 * 60       <span class="code-comment">// 48 hours</span>
+    LEVEL_4_INTERVAL = 48 * 60 * 60       <span class="code-comment">// 48 hours</span>
+    LEVEL_5_INTERVAL = 72 * 60 * 60       <span class="code-comment">// 72 hours</span>
+    LEVEL_6_INTERVAL = 192 * 60 * 60      <span class="code-comment">// 192 hours</span>
+    LEVEL_7_INTERVAL = 365 * 24 * 60 * 60 <span class="code-comment">// 365 days</span>
+)
+
+<span class="code-keyword">func</span> <span class="code-function">GetReviewInterval</span>(level <span class="code-keyword">int</span>) <span class="code-keyword">int64</span> {
+    <span class="code-keyword">switch</span> level {
+    <span class="code-keyword">case</span> 0: <span class="code-keyword">return</span> LEVEL_0_INTERVAL
+    <span class="code-keyword">case</span> 1: <span class="code-keyword">return</span> LEVEL_1_INTERVAL
+    <span class="code-comment">// ... more levels</span>
+    }
+}</code></pre>
+            </div>
+
+            <div class="metaphor-box">
+                <strong>Think of a video game:</strong> Each word starts at Level 0. Every time you answer all question types correctly, you "level up" and the next review gets scheduled further in the future.
+            </div>
+
+            <h3 style="font-family: var(--font-display); font-size: 1.5rem; margin-top: var(--space-xl); margin-bottom: var(--space-md); color: var(--vermillion);">Bitmask Scoring: The Secret Sauce</h3>
+
+            <div class="text-block">
+                Each word has a <strong>score</strong> that tracks which question types you've mastered. It uses <span class="glossary" data-tooltip="A technique where each bit in a number represents a true/false flag. Allows storing multiple booleans in a single integer.">bitmasks</span> - a clever way to store 4 booleans in one number.
+            </div>
+
+            <div class="bitmask-demo">
+                <div class="bit">
+                    <div class="bit-value">0</div>
+                    <div class="bit-label">CHOOSE_CN</div>
+                </div>
+                <div class="bit active">
+                    <div class="bit-value">1</div>
+                    <div class="bit-label">CHOOSE_EN</div>
+                </div>
+                <div class="bit active">
+                    <div class="bit-value">1</div>
+                    <div class="bit-label">PRONOUNCE</div>
+                </div>
+                <div class="bit">
+                    <div class="bit-value">0</div>
+                    <div class="bit-label">FILL_BLANK</div>
+                </div>
+            </div>
+
+            <p style="text-align: center; margin-top: var(--space-md); font-family: var(--font-code); color: var(--warm-gray-600);">
+                Binary: 0110 = Decimal: 6
+            </p>
+
+            <div class="translation">
+                <div class="translation-side">
+                    <h3>Code</h3>
+                    <div class="translation-code"><span class="code-comment">// Set the bit for this question type</span>
+reciteRecord.Score |= (1 << (questionType - 1))
+
+<span class="code-comment">// Check if all bits are set (MAX_SCORE = 15 = 1111)</span>
+<span class="code-keyword">if</span> (reciteRecord.Score & maxScore) == maxScore {
+    <span class="code-comment">// All question types mastered!</span>
+    reciteRecord.Score = 0
+    reciteRecord.Level++
+    interval := global.<span class="code-function">GetReviewInterval</span>(reciteRecord.Level)
+    reciteRecord.NextReviewTime = now.<span class="code-function">Add</span>(interval).<span class="code-function">Unix</span>()
+}</div>
+                </div>
+                <div class="translation-side">
+                    <h3>English</h3>
+                    <div class="translation-english">
+                        <p><strong>When you answer correctly:</strong> We "turn on" the bit for that question type using bitwise OR.</p>
+                        <p><strong>When all 4 bits are on:</strong> Score becomes 15 (binary 1111). You leveled up!</p>
+                        <p><strong>Reset and schedule:</strong> Score goes back to 0, level increases, and we calculate when you should see this word again.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quiz">
+                <div class="quiz-question">Your score for "ubiquitous" is 13 (binary 1101). Which question type have you NOT mastered yet?</div>
+                <div class="quiz-options">
+                    <div class="quiz-option" data-answer="wrong">CHOOSE_CN (bit 0)</div>
+                    <div class="quiz-option" data-answer="correct">CHOOSE_EN (bit 1)</div>
+                    <div class="quiz-option" data-answer="wrong">PRONOUNCE_CHOOSE (bit 2)</div>
+                    <div class="quiz-option" data-answer="wrong">FILL_IN_BLANK (bit 3)</div>
+                </div>
+                <div class="quiz-feedback"></div>
+            </div>
+
+            <div class="nav-buttons">
+                <button class="btn" onclick="goToModule(3)">Previous</button>
+                <button class="btn" onclick="goToModule(5)">Next Module</button>
+            </div>
+        </section>
+
+        <!-- Module 5: AI Superpowers -->
+        <section class="module" id="module5">
+            <h1 class="module-header">Module 5: AI Superpowers</h1>
+            <p class="module-subtitle">Chat, Speech & Vision</p>
+
+            <div class="text-block">
+                Stream to River integrates three AI capabilities: <span class="glossary" data-tooltip="Large Language Model - AI that generates human-like text. Stream to River uses Doubao (ByteDance's LLM).">LLM chat</span>, <span class="glossary" data-tooltip="Automatic Speech Recognition - converts spoken words to text. Uses Volcano Engine's ASR service.">speech recognition</span>, and <span class="glossary" data-tooltip="Vision models that can read text from images. Uses Doubao's vision model.">image-to-text</span>.
+            </div>
+
+            <div class="text-block">
+                The chat feature is the most complex. It streams responses in real-time using <span class="glossary" data-tooltip="Server-Sent Events - a protocol for servers to push data to clients. Unlike WebSocket, it's one-directional (server to client).">SSE</span> and runs multiple goroutines in parallel.
+            </div>
+
+            <div class="metaphor-box">
+                <strong>Think of a conductor with an orchestra:</strong> The chat handler is the conductor. It starts three musicians (goroutines) playing simultaneously: one generates AI text, one highlights words, and one reviews for safety. They all play together in harmony.
+            </div>
+
+            <h3 style="font-family: var(--font-display); font-size: 1.5rem; margin-top: var(--space-xl); margin-bottom: var(--space-md); color: var(--vermillion);">Parallel Goroutine Orchestra</h3>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span class="code-title">/rpcservice/biz/chat/chat.go</span>
+                    <span class="code-lang">Go</span>
+                </div>
+                <pre><code><span class="code-keyword">func</span> <span class="code-function">ChatHandler</span>(ctx context.Context, req *words.ChatReq, stream words.WordService_ChatServer) <span class="code-keyword">error</span> {
+    <span class="code-comment">// Create channels for communication</span>
+    reviewEnd := <span class="code-function">make</span>(<span class="code-keyword">chan</span> <span class="code-keyword">bool</span>, 1)
+    highlightResourceChan := <span class="code-function">make</span>(<span class="code-keyword">chan</span> <span class="code-keyword">string</span>, 100)
+    highlightResultChan := <span class="code-function">make</span>(<span class="code-keyword">chan</span> []HighlightItem, 100)
+
+    <span class="code-comment">// Goroutine 1: Review the prompt for safety</span>
+    gopool.<span class="code-function">CtxGo</span>(ctx, <span class="code-keyword">func</span>() {
+        reviewEnd <- <span class="code-function">PromptReview</span>(ctx, req.QueryMsg)
+    })
+
+    <span class="code-comment">// Goroutine 2: Highlight words in the response</span>
+    gopool.<span class="code-function">CtxGo</span>(ctx, <span class="code-keyword">func</span>() {
+        <span class="code-function">cozeHighlight</span>(ctx, highlightResourceChan, highlightResultChan)
+    })
+
+    <span class="code-comment">// Goroutine 3: Send highlight results to client</span>
+    gopool.<span class="code-function">CtxGo</span>(ctx, <span class="code-keyword">func</span>() {
+        <span class="code-keyword">for</span> highlightItems := <span class="code-keyword">range</span> highlightResultChan {
+            stream.<span class="code-function">Send</span>(ctx, &words.ChatResp{
+                Extra: <span class="code-function">map</span>[<span class="code-keyword">string</span>]<span class="code-keyword">string</span>{<span class="code-string">"meta_info"</span>: metaInfo}
+            })
+        }
+    })
+
+    <span class="code-comment">// Main goroutine: Stream AI response</span>
+    <span class="code-keyword">for</span> {
+        chunk, err := modelMsg.<span class="code-function">Recv</span>()
+        <span class="code-keyword">if</span> err == io.EOF { <span class="code-keyword">break</span> }
+
+        respFullText += chunk.Content
+        stream.<span class="code-function">Send</span>(ctx, &words.ChatResp{Msg: chunk.Content})
+        highlightResourceChan <- chunk.Content
+    }
+}</code></pre>
+            </div>
+
+            <div class="translation">
+                <div class="translation-side">
+                    <h3>Code</h3>
+                    <div class="translation-code"><span class="code-keyword">var</span> modelMsgSendDone int32 = 0
+<span class="code-keyword">defer</span> <span class="code-keyword">func</span>() {
+    atomic.<span class="code-function">StoreInt32</span>(&modelMsgSendDone, 1)
+}()
+
+errSend := stream.<span class="code-function">Send</span>(...)
+<span class="code-keyword">if</span> errSend != <span class="code-keyword">nil</span> &&
+   atomic.<span class="code-function">LoadInt32</span>(&modelMsgSendDone) != 1 {
+    klog.<span class="code-function">CtxErrorf</span>(ctx, <span class="code-string">"send failed"</span>)
+}</div>
+                </div>
+                <div class="translation-side">
+                    <h3>English</h3>
+                    <div class="translation-english">
+                        <p>We use an <span class="glossary" data-tooltip="Atomic operations that are guaranteed to complete without interruption, preventing race conditions in concurrent code.">atomic variable</span> as a flag.</p>
+                        <p>When the main function exits, we set the flag to 1.</p>
+                        <p>Other goroutines check this flag before logging errors - if the main goroutine already exited, the error is expected.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="visual-diagram">
+                <h3 class="diagram-title">Goroutine Timeline</h3>
+
+                <div style="background: white; padding: var(--space-lg); border-radius: 12px; margin-top: var(--space-lg);">
+                    <div style="display: flex; flex-direction: column; gap: var(--space-md);">
+                        <div style="display: flex; align-items: center; gap: var(--space-sm);">
+                            <div style="width: 120px; font-weight: 600; color: var(--vermillion);">Main Thread:</div>
+                            <div style="flex: 1; height: 30px; background: linear-gradient(90deg, #FF6B6B, #FF8E53); border-radius: 4px; display: flex; align-items: center; padding: 0 var(--space-sm); color: white; font-size: 0.875rem;">
+                                Stream AI chunks →
+                            </div>
+                        </div>
+
+                        <div style="display: flex; align-items: center; gap: var(--space-sm);">
+                            <div style="width: 120px; font-weight: 600; color: var(--vermillion);">Goroutine 1:</div>
+                            <div style="flex: 1; height: 30px; background: linear-gradient(90deg, #4ECDC4, #44A08D); border-radius: 4px; display: flex; align-items: center; padding: 0 var(--space-sm); color: white; font-size: 0.875rem;">
+                                Review prompt (300ms)
+                            </div>
+                        </div>
+
+                        <div style="display: flex; align-items: center; gap: var(--space-sm);">
+                            <div style="width: 120px; font-weight: 600; color: var(--vermillion);">Goroutine 2:</div>
+                            <div style="flex: 1; height: 30px; background: linear-gradient(90deg, #A8E6CF, #88D8B0); border-radius: 4px; display: flex; align-items: center; padding: 0 var(--space-sm); color: white; font-size: 0.875rem;">
+                                Highlight words →
+                            </div>
+                        </div>
+
+                        <div style="display: flex; align-items: center; gap: var(--space-sm);">
+                            <div style="width: 120px; font-weight: 600; color: var(--vermillion);">Goroutine 3:</div>
+                            <div style="flex: 1; height: 30px; background: linear-gradient(90deg, #FFD93D, #F6A52D); border-radius: 4px; display: flex; align-items: center; padding: 0 var(--space-sm); color: white; font-size: 0.875rem;">
+                                Send highlights →
+                            </div>
+                        </div>
+                    </div>
+
+                    <p style="text-align: center; margin-top: var(--space-md); color: var(--warm-gray-600); font-size: 0.875rem;">
+                        All running simultaneously, communicating via channels
+                    </p>
+                </div>
+            </div>
+
+            <div class="quiz">
+                <div class="quiz-question">Why does the chat handler wait up to 2 seconds for highlights to finish, but only 300ms for prompt review?</div>
+                <div class="quiz-options">
+                    <div class="quiz-option" data-answer="wrong">Highlighting is more important than safety</div>
+                    <div class="quiz-option" data-answer="correct">Prompt review is fast (p99 = 300ms), but highlighting processes the entire response which takes longer</div>
+                    <div class="quiz-option" data-answer="wrong">The numbers are arbitrary and could be anything</div>
+                    <div class="quiz-option" data-answer="wrong">Highlighting uses a slower external API</div>
+                </div>
+                <div class="quiz-feedback"></div>
+            </div>
+
+            <div class="nav-buttons">
+                <button class="btn" onclick="goToModule(4)">Previous</button>
+                <button class="btn" onclick="goToModule(6)">Next Module</button>
+            </div>
+        </section>
+
+        <!-- Module 6: The Big Picture -->
+        <section class="module" id="module6">
+            <h1 class="module-header">Module 6: The Big Picture</h1>
+            <p class="module-subtitle">What You Learned & How to Use It</p>
+
+            <div class="text-block">
+                You've journeyed through the entire Stream to River codebase. Let's bring it all together.
+            </div>
+
+            <div class="visual-diagram">
+                <h3 class="diagram-title">Complete Architecture</h3>
+
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-lg); margin-top: var(--space-lg);">
+                    <div style="background: linear-gradient(135deg, rgba(255, 107, 107, 0.1), rgba(255, 142, 83, 0.1)); padding: var(--space-lg); border-radius: 12px; border: 2px solid #FF6B6B;">
+                        <h4 style="font-family: var(--font-display); color: var(--vermillion); margin-bottom: var(--space-md);">Frontend</h4>
+                        <ul style="list-style: none; padding: 0; font-size: 0.95rem; color: var(--warm-gray-800);">
+                            <li style="margin-bottom: var(--space-xs);">→ User clicks</li>
+                            <li style="margin-bottom: var(--space-xs);">→ HTTP requests</li>
+                            <li style="margin-bottom: var(--space-xs);">→ Renders responses</li>
+                        </ul>
+                    </div>
+
+                    <div style="background: linear-gradient(135deg, rgba(78, 205, 196, 0.1), rgba(68, 160, 141, 0.1)); padding: var(--space-lg); border-radius: 12px; border: 2px solid #4ECDC4;">
+                        <h4 style="font-family: var(--font-display); color: var(--vermillion); margin-bottom: var(--space-md);">API Service (Hertz)</h4>
+                        <ul style="list-style: none; padding: 0; font-size: 0.95rem; color: var(--warm-gray-800);">
+                            <li style="margin-bottom: var(--space-xs);">→ JWT validation</li>
+                            <li style="margin-bottom: var(--space-xs);">→ Request binding</li>
+                            <li style="margin-bottom: var(--space-xs);">→ RPC calls</li>
+                        </ul>
+                    </div>
+
+                    <div style="background: linear-gradient(135deg, rgba(168, 230, 207, 0.1), rgba(136, 216, 176, 0.1)); padding: var(--space-lg); border-radius: 12px; border: 2px solid #88D8B0;">
+                        <h4 style="font-family: var(--font-display); color: var(--vermillion); margin-bottom: var(--space-md);">RPC Service (Kitex)</h4>
+                        <ul style="list-style: none; padding: 0; font-size: 0.95rem; color: var(--warm-gray-800);">
+                            <li style="margin-bottom: var(--space-xs);">→ Business logic</li>
+                            <li style="margin-bottom: var(--space-xs);">→ Quiz generation</li>
+                            <li style="margin-bottom: var(--space-xs);">→ AI integration</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-lg); margin-top: var(--space-lg);">
+                    <div style="background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 193, 7, 0.1)); padding: var(--space-lg); border-radius: 12px; border: 2px solid #FFD700;">
+                        <h4 style="font-family: var(--font-display); color: var(--vermillion); margin-bottom: var(--space-md);">Data Layer</h4>
+                        <ul style="list-style: none; padding: 0; font-size: 0.95rem; color: var(--warm-gray-800);">
+                            <li style="margin-bottom: var(--space-xs);">→ MySQL (persistence)</li>
+                            <li style="margin-bottom: var(--space-xs);">→ Redis (caching)</li>
+                            <li style="margin-bottom: var(--space-xs);">→ DAO pattern</li>
+                        </ul>
+                    </div>
+
+                    <div style="background: linear-gradient(135deg, rgba(186, 85, 211, 0.1), rgba(147, 51, 234, 0.1)); padding: var(--space-lg); border-radius: 12px; border: 2px solid #BA55D3;">
+                        <h4 style="font-family: var(--font-display); color: var(--vermillion); margin-bottom: var(--space-md);">External Services</h4>
+                        <ul style="list-style: none; padding: 0; font-size: 0.95rem; color: var(--warm-gray-800);">
+                            <li style="margin-bottom: var(--space-xs);">→ LLM (Doubao)</li>
+                            <li style="margin-bottom: var(--space-xs);">→ ASR (Volcano)</li>
+                            <li style="margin-bottom: var(--space-xs);">→ Vision API</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="font-family: var(--font-display); font-size: 1.5rem; margin-top: var(--space-xl); margin-bottom: var(--space-md); color: var(--vermillion);">Key Takeaways for AI Development</h3>
+
+            <div style="display: grid; grid-template-columns: 1fr; gap: var(--space-md); margin: var(--space-lg) 0;">
+                <div style="padding: var(--space-lg); background: white; border-radius: 12px; border-left: 4px solid var(--vermillion);">
+                    <h4 style="font-family: var(--font-display); font-size: 1.125rem; margin-bottom: var(--space-sm); color: var(--vermillion);">1. Separation of Concerns</h4>
+                    <p style="color: var(--warm-gray-800);">API Service handles HTTP, RPC Service handles logic. This makes the codebase easier to navigate and scale.</p>
+                    <p style="margin-top: var(--space-sm); font-style: italic; color: var(--warm-gray-600);">When prompting AI: "The API layer should only validate and forward requests to RPC"</p>
+                </div>
+
+                <div style="padding: var(--space-lg); background: white; border-radius: 12px; border-left: 4px solid var(--vermillion);">
+                    <h4 style="font-family: var(--font-display); font-size: 1.125rem; margin-bottom: var(--space-sm); color: var(--vermillion);">2. Concurrency Patterns</h4>
+                    <p style="color: var(--warm-gray-800);">Use goroutines + channels for parallel work. Atomic variables prevent race conditions.</p>
+                    <p style="margin-top: var(--space-sm); font-style: italic; color: var(--warm-gray-600);">When prompting AI: "Run the review check in a goroutine and communicate via a channel"</p>
+                </div>
+
+                <div style="padding: var(--space-lg); background: white; border-radius: 12px; border-left: 4px solid var(--vermillion);">
+                    <h4 style="font-family: var(--font-display); font-size: 1.125rem; margin-bottom: var(--space-sm); color: var(--vermillion);">3. Bitmasks for Efficient State</h4>
+                    <p style="color: var(--warm-gray-800);">Store multiple booleans in a single integer using bitwise operations.</p>
+                    <p style="margin-top: var(--space-sm); font-style: italic; color: var(--warm-gray-600);">When prompting AI: "Use a bitmask to track which question types the user has mastered"</p>
+                </div>
+
+                <div style="padding: var(--space-lg); background: white; border-radius: 12px; border-left: 4px solid var(--vermillion);">
+                    <h4 style="font-family: var(--font-display); font-size: 1.125rem; margin-bottom: var(--space-sm); color: var(--vermillion);">4. Streaming for Real-Time UX</h4>
+                    <p style="color: var(--warm-gray-800);">Use SSE to stream AI responses chunk by chunk instead of waiting for the complete response.</p>
+                    <p style="margin-top: var(--space-sm); font-style: italic; color: var(--warm-gray-600);">When prompting AI: "Stream the LLM response using Server-Sent Events"</p>
+                </div>
+            </div>
+
+            <div class="metaphor-box">
+                <strong>Final metaphor:</strong> This codebase is like a well-run kitchen. The API Service is the waiter (takes orders, serves food). The RPC Service is the chef (prepares complex dishes). The Database is the pantry (stores ingredients). And the AI services are the specialized tools (like a pasta maker or ice cream machine).
+            </div>
+
+            <div class="quiz">
+                <div class="quiz-question">You want to add a new feature: "daily word of the day". Which service should contain the logic for selecting the word?</div>
+                <div class="quiz-options">
+                    <div class="quiz-option" data-answer="wrong">API Service - it handles all user-facing features</div>
+                    <div class="quiz-option" data-answer="correct">RPC Service - business logic belongs here</div>
+                    <div class="quiz-option" data-answer="wrong">Database - create a stored procedure</div>
+                    <div class="quiz-option" data-answer="wrong">Frontend - it's just a display feature</div>
+                </div>
+                <div class="quiz-feedback"></div>
+            </div>
+
+            <h3 style="font-family: var(--font-display); font-size: 1.5rem; margin-top: var(--space-2xl); margin-bottom: var(--space-md); color: var(--vermillion); text-align: center;">Congratulations!</h3>
+
+            <p style="text-align: center; font-size: 1.125rem; color: var(--warm-gray-700); margin-bottom: var(--space-lg);">
+                You've mastered the Stream to River codebase. You now understand how modern microservices work, how to implement spaced repetition, and how to integrate AI into real applications.
+            </p>
+
+            <div style="text-align: center; padding: var(--space-xl); background: linear-gradient(135deg, rgba(217, 79, 48, 0.1), rgba(230, 121, 89, 0.1)); border-radius: 12px;">
+                <p style="font-size: 1.25rem; font-weight: 600; color: var(--vermillion);">
+                    Ready to explore the actual code? Check out the repository and start building!
+                </p>
+            </div>
+
+            <div class="nav-buttons">
+                <button class="btn" onclick="goToModule(5)">Previous</button>
+                <button class="btn" onclick="goToModule(1)">Start Over</button>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Glossary tooltips
+        const glossaryTerms = document.querySelectorAll('.glossary');
+        const tooltip = document.createElement('div');
+        tooltip.className = 'tooltip';
+        document.body.appendChild(tooltip);
+
+        glossaryTerms.forEach(term => {
+            term.addEventListener('mouseenter', (e) => {
+                const text = term.getAttribute('data-tooltip');
+                tooltip.textContent = text;
+                tooltip.classList.add('show');
+
+                const rect = term.getBoundingClientRect();
+                tooltip.style.left = rect.left + 'px';
+                tooltip.style.top = (rect.top - tooltip.offsetHeight - 10) + 'px';
+            });
+
+            term.addEventListener('mouseleave', () => {
+                tooltip.classList.remove('show');
+            });
+        });
+
+        // Module navigation
+        let currentModule = 1;
+        const totalModules = 6;
+
+        function goToModule(moduleNum) {
+            currentModule = moduleNum;
+            updateProgress();
+
+            // Hide all modules
+            document.querySelectorAll('.module').forEach(m => {
+                m.classList.remove('visible');
+            });
+
+            // Show target module
+            const targetModule = document.getElementById('module' + moduleNum);
+            targetModule.classList.add('visible');
+
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function updateProgress() {
+            const progress = (currentModule / totalModules) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('moduleIndicator').textContent = `Module ${currentModule}/${totalModules}`;
+        }
+
+        // Quiz functionality
+        document.querySelectorAll('.quiz-option').forEach(option => {
+            option.addEventListener('click', function() {
+                const quiz = this.closest('.quiz');
+                const options = quiz.querySelectorAll('.quiz-option');
+                const feedback = quiz.querySelector('.quiz-feedback');
+                const isCorrect = this.getAttribute('data-answer') === 'correct';
+
+                // Remove previous selections
+                options.forEach(opt => {
+                    opt.classList.remove('selected', 'correct', 'incorrect');
+                });
+
+                // Mark selection
+                this.classList.add('selected');
+
+                if (isCorrect) {
+                    this.classList.add('correct');
+                    feedback.textContent = 'Correct! You understand the concept.';
+                    feedback.className = 'quiz-feedback correct show';
+                } else {
+                    this.classList.add('incorrect');
+                    // Find and highlight correct answer
+                    options.forEach(opt => {
+                        if (opt.getAttribute('data-answer') === 'correct') {
+                            opt.classList.add('correct');
+                        }
+                    });
+                    feedback.textContent = 'Not quite. The correct answer is highlighted above.';
+                    feedback.className = 'quiz-feedback incorrect show';
+                }
+            });
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' && currentModule < totalModules) {
+                goToModule(currentModule + 1);
+            } else if (e.key === 'ArrowLeft' && currentModule > 1) {
+                goToModule(currentModule - 1);
+            }
+        });
+
+        // Intersection Observer for module visibility
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.module').forEach(module => {
+            observer.observe(module);
+        });
+
+        // Initialize first module
+        goToModule(1);
+    </script>
+</body>
+</html>
